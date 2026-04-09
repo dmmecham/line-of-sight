@@ -3,9 +3,7 @@
 #include <algorithm>
 
 // Added eye/target height offsets (default to 0 if you just want ground-to-ground)
-bool isVisible(int x1, int y1, int x2, int y2, const short* heightMap) {
-    const int width = 6000;
-    
+bool isVisible(int x1, int y1, int x2, int y2, const short* heightMap, int width) {
     // Fetch start and end heights from the map and add offsets
     short h1 = heightMap[y1 * width + x1];
     short h2 = heightMap[y2 * width + x2];

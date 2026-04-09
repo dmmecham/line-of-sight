@@ -12,45 +12,9 @@
 const int WIDTH = 6000; // Only dimensions of 6000 x 6000 pixels are supported.
 const int GRID_SIZE = WIDTH * WIDTH;
 const size_t BUFFER_SIZE = GRID_SIZE * sizeof(int16_t);
-const int RADIUS = 100; // radius in pixels (results in (2*RADIUS+1)^2 window)
+const int RADIUS = 10; // radius in pixels (results in (2*RADIUS+1)^2 window)
 
-// Serial (single-threaded) algorithm implementation
-void serialAlgorithm(const std::vector<int16_t>& heightMap, std::vector<int32_t>& visibleCounts) {
-    auto t0 = std::chrono::high_resolution_clock::now();
-
-    for (int y1 = 0; y1 < WIDTH; ++y1) {
-        for (int x1 = 0; x1 < WIDTH; ++x1) {
-            int idx1 = y1 * WIDTH + x1;
-            int32_t count = 0;
-
-            // Radius-limited window
-            int y0 = std::max(0, y1 - RADIUS);
-            int yN = std::min(WIDTH - 1, y1 + RADIUS);
-            int x0 = std::max(0, x1 - RADIUS);
-            int xN = std::min(WIDTH - 1, x1 + RADIUS);
-
-            for (int y2 = y0; y2 <= yN; ++y2) {
-                for (int x2 = x0; x2 <= xN; ++x2) {
-                    if (x1 == x2 && y1 == y2) continue;
-                    if (isVisible(x1, y1, x2, y2, heightMap.data())) ++count;
-                }
-            }
-
-            visibleCounts[idx1] = count;
-        }
-
-        // Print progress every 64 rows
-        if ((y1 % 64) == 0) {
-            auto tnow = std::chrono::high_resolution_clock::now();
-            double sec = std::chrono::duration<double>(tnow - t0).count();
-            std::cout << "Row " << y1 << " elapsed: " << sec << "s" << std::endl;
-        }
-    }
-
-    auto t1 = std::chrono::high_resolution_clock::now();
-    double totalSec = std::chrono::duration<double>(t1 - t0).count();
-    std::cout << "Visibility computation complete in " << totalSec << " seconds." << std::endl;
-}
+void serialAlgorithm(const std::vector<int16_t>& heightMap, std::vector<int32_t>& visibleCounts, int width, int radius);
 
 // CUDA Error Checking Macro
 /*#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -89,7 +53,7 @@ int main(int argc, char** argv) {
     std::vector<int32_t> visibleCounts(GRID_SIZE, 0);
 
     // Run the serial algorithm implementation
-    serialAlgorithm(heightMap, visibleCounts);
+    serialAlgorithm(heightMap, visibleCounts, WIDTH, RADIUS);
 
     // Write output file as 32-bit signed ints
     std::string outPath = filePath + ".visible.raw";
@@ -107,3 +71,42 @@ int main(int argc, char** argv) {
     return 0;
 }
 
+// Serial implementation
+void serialAlgorithm(const std::vector<int16_t>& heightMap, std::vector<int32_t>& visibleCounts, int width, int radius) {
+    auto t0 = std::chrono::high_resolution_clock::now();
+
+    for (int y1 = 0; y1 < width; ++y1) {
+        for (int x1 = 0; x1 < width; ++x1) {
+            int idx1 = y1 * width + x1;
+            int32_t count = 0;
+
+            // Radius-limited window
+            int y0 = std::max(0, y1 - radius);
+            int yN = std::min(width - 1, y1 + radius);
+            int x0 = std::max(0, x1 - radius);
+            int xN = std::min(width - 1, x1 + radius);
+
+            for (int y2 = y0; y2 <= yN; ++y2) {
+                for (int x2 = x0; x2 <= xN; ++x2) {
+                    // Skip self-comparison
+                    if (x1 == x2 && y1 == y2) continue;
+                    // Check line of sight using Bresenham's algorithm
+                    if (isVisible(x1, y1, x2, y2, heightMap.data(), width)) ++count;
+                }
+            }
+
+            visibleCounts[idx1] = count;
+        }
+
+        // Print progress every 64 rows
+        if ((y1 % 64) == 0) {
+            auto tnow = std::chrono::high_resolution_clock::now();
+            double sec = std::chrono::duration<double>(tnow - t0).count();
+            std::cout << "Row " << y1 << " elapsed: " << sec << "s" << std::endl;
+        }
+    }
+
+    auto t1 = std::chrono::high_resolution_clock::now();
+    double totalSec = std::chrono::duration<double>(t1 - t0).count();
+    std::cout << "Visibility computation complete in " << totalSec << " seconds." << std::endl;
+}
