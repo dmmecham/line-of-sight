@@ -5,10 +5,19 @@
 
 #include "cuda_runtime.h"
 
-const int BLOCK_SIZE = 32; // The size of the block for the GPU kernel.
+const int BLOCK_SIZE = 16; // The size of the block for the GPU kernel.
 const int MASK_SIZE = 100;
 const int MASK_RADIUS = MASK_SIZE / 2; // The radius of the neighborhood, which is used to determine how much extra space is needed in the tile for the shared memory kernel.
 const int TILE_SIZE = BLOCK_SIZE + MASK_SIZE - 1; // The size of the tile that each block will process.
+
+// CUDA Error Checking Macro
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort = true) {
+  if (code != cudaSuccess) {
+    std::cerr << "GPUassert: " << cudaGetErrorString(code) << " " << file << " " << line << std::endl;
+    if (abort) exit(code);
+  }
+}
 
 class CudaTimer {
 public:
@@ -57,29 +66,37 @@ public:
     // Pointers for synchronizing device memory.
     size_t inputSize = height * width * sizeof(INPUT_DATA_TYPE);
     size_t outputSize = height * width * sizeof(OUTPUT_DATA_TYPE);
+    std::cout << inputSize << " -> " << outputSize << std::endl;
     INPUT_DATA_TYPE* input_d;
     OUTPUT_DATA_TYPE* output_d;
     // Allocate device memory for the current input and the temporary input.
-    cudaMalloc(&input_d, inputSize);
-    cudaMalloc(&output_d, outputSize);
+    gpuErrchk(cudaMalloc(&input_d, inputSize));
+    gpuErrchk(cudaMalloc(&output_d, outputSize));
     // Copy the initial input from host to device memory.
-    cudaMemcpy(input_d, input_h, inputSize, cudaMemcpyHostToDevice);
+    gpuErrchk(cudaMemcpy(input_d, input_h, inputSize, cudaMemcpyHostToDevice));
     // Make sure data fully copied to the device before launching the kernel.
-    cudaDeviceSynchronize();
+    if (cudaDeviceSynchronize() != cudaSuccess) {
+      std::cerr << "Error: Data copy to device failed." << std::endl;
+      return nullptr;
+    }
+    gpuErrchk(cudaPeekAtLastError());
+    dim3 block(BLOCK_SIZE, BLOCK_SIZE, 1);
+    dim3 numBlocks(std::ceil(width / (1.0 * BLOCK_SIZE)), std::ceil(height / (1.0 * BLOCK_SIZE)), 1);
 
-    //dim3 block(BLOCK_SIZE, BLOCK_SIZE, 1);
-    //dim3 numBlocks(std::ceil(width / (1.0 * BLOCK_SIZE)), std::ceil(height / (1.0 * BLOCK_SIZE)), 1);
-
-    int block = (height * width + 1024 - 1) / 1024;
+    std::cout << "Launching kernel with " << block.x << "x" << block.y << " threads per block and " << numBlocks.x << "x" << numBlocks.y << " blocks." << std::endl;
     // Launch the kernel to compute the output.
-    kernel<<<1024, block>>>(input_d, output_d, height, width, radius);
-
+    std::cout << height << "x" << width << " with radius " << radius << std::endl;
+    std::cout << "Input: " << input_h[0] << ", " << input_h[1] << ", " << input_h[2] << std::endl;
+    
+    kernel<<<numBlocks, block>>>(input_d, output_d, height, width, radius);
+    gpuErrchk(cudaPeekAtLastError());
     // Copy the output back from the device to the host.
     OUTPUT_DATA_TYPE* output_h = new OUTPUT_DATA_TYPE[outputSize];
-    cudaMemcpy(output_h, output_d, outputSize, cudaMemcpyDeviceToHost);
-    // Make sure data fully copied back to the host.
-    cudaDeviceSynchronize();
-
+    gpuErrchk(cudaMemcpy(output_h, output_d, outputSize, cudaMemcpyDeviceToHost));
+    if (cudaDeviceSynchronize() != cudaSuccess) {
+      std::cerr << "Error: Data copy to device failed." << std::endl;
+      return nullptr;
+    }
     // Clean up device memory.
     cudaFree(input_d);
     cudaFree(output_d);

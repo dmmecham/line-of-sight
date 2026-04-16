@@ -13,6 +13,14 @@
 #include "cuda_utilities.hpp"
 
 #include "gpu.hpp"
+template <typename T, typename U>
+__global__ void simple(T* input, U* output, size_t height, size_t width, size_t radius)
+{
+  size_t x1 = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t y1 = blockIdx.y * blockDim.y + threadIdx.y;
+
+  output[y1 * width + x1] = input[y1 * width + x1];
+}
 
 __global__ void lineOfSightKernel(int16_t* input, int32_t* output, size_t height, size_t width, size_t radius) {
   size_t x1 = blockIdx.x * blockDim.x + threadIdx.x;
@@ -38,16 +46,17 @@ __global__ void lineOfSightKernel(int16_t* input, int32_t* output, size_t height
     }
   }
   output[y1 * width + x1] = visiblePoints;
-
-  if (x1 == 0 && y1 == 0) {
-    printf("x1: %llu y1: %llu xStart: %llu xEnd: %llu yStart: %llu yEnd: %llu visible: %d\n", x1, y1, xStart, xEnd, yStart, yEnd, visiblePoints);
+  if (y1 % 64 == 0 && x1 == 0) {
+    printf("Processing row %d\n", y1);
   }
 }
 
 std::vector<int32_t>* gpu(int16_t* input, size_t height, size_t width, size_t radius) {
   CudaEngine<int16_t, int32_t> engine(lineOfSightKernel, height, width, radius);
   
-  std::vector<int32_t>* output = new std::vector<int32_t>(*engine.compute(input));
+  int32_t* data = engine.compute(input);
+  std::vector<int32_t>* output = new std::vector<int32_t>(data, data + (height * width * sizeof(int32_t)));
+  std::cout << output->size() << std::endl;
   
   std::cout << "GPU Time: " << std::fixed << std::setprecision(2) << engine.getTime() << " ms" << std::endl;
 

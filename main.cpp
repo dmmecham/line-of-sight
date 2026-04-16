@@ -55,15 +55,6 @@ void printUsage(char* processName) {
   std::cerr << "]>" << std::endl;
 }
 
-// CUDA Error Checking Macro
-/*#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true) {
-   if (code != cudaSuccess) {
-      std::cerr << "GPUassert: " << cudaGetErrorString(code) << " " << file << " " << line << std::endl;
-      if (abort) exit(code);
-   }
-}*/
-
 int main(int argc, char** argv) {
     if (argc != 7) {
         printUsage(argv[0]);
@@ -97,6 +88,13 @@ int main(int argc, char** argv) {
         std::cerr << "Error reading input file." << std::endl;
         return 1;
     }
+
+    std::cout << "Read height map from: " << inputFilePath << std::endl;
+    std::cout << "Dimensions: " << width << "x" << height << ", Radius: " << radius << std::endl;
+    std::cout << "Compute Type: " << argv[6] << std::endl;
+    std::cout << totalBytes << " bytes read." << std::endl;
+    std::cout << dataSize << " bytes expected." << std::endl;
+
     std::vector<int32_t>* output;
 
     switch (computeType) {
@@ -128,7 +126,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    outFile.write(reinterpret_cast<const char*>(output->data()), output->size() * sizeof(int32_t));
+    outFile.write(reinterpret_cast<const char*>(output->data()), output->size());
     outFile.close();
 
     std::cout << "Wrote visibility counts to: " << outputFilePath << std::endl;
