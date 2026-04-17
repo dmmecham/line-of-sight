@@ -63,8 +63,8 @@ int main(int argc, char** argv) {
 
     std::string inputFilePath = argv[1];
     std::string outputFilePath = argv[2];
-    size_t width = std::atoll(argv[3]);
-    size_t height = std::atoll(argv[4]);
+    size_t height = std::atoll(argv[3]);
+    size_t width = std::atoll(argv[4]);
     size_t radius = std::atoll(argv[5]);
     ComputeType computeType = computeTypeMap[argv[6]];
 
