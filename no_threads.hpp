@@ -20,10 +20,10 @@ inline void serialAlgorithm(std::string inputFilePath, std::string outputFilePat
             int32_t count = 0;
 
             // Radius-limited window
-            size_t y0 = std::max((size_t)0, y1 - radius);
-            size_t yN = std::min(height - 1, y1 + radius);
-            size_t x0 = std::max((size_t)0, x1 - radius);
-            size_t xN = std::min(width - 1, x1 + radius);
+            int y0 = std::max(0, (int)y1 - (int)radius);
+            int yN = std::min((int)height - 1, (int)y1 + (int)radius);
+            int x0 = std::max(0, (int)x1 - (int)radius);
+            int xN = std::min((int)width - 1, (int)x1 + (int)radius);
 
             for (int y2 = y0; y2 <= yN; ++y2) {
                 for (int x2 = x0; x2 <= xN; ++x2) {
