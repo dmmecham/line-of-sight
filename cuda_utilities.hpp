@@ -88,14 +88,16 @@ public:
     int blockSize = 0;
     int minimumGridSize = 0;
     cudaOccupancyMaxPotentialBlockSize(&minimumGridSize, &blockSize, kernel, 0, 0);
-    int blockRoot = sqrt(blockSize);
-    int gridSize = (numberOfPixels + blockSize - 1) / blockSize;
     
     // Launch the kernel to compute the output.
     std::cout << height << "x" << width << " with radius " << radius << std::endl;
     std::cout << "Input: " << input_h[0] << ", " << input_h[1] << ", " << input_h[2] << std::endl;
-    
-    kernel<<<gridSize, dim3(blockRoot, blockRoot)>>>(input_d, output_d, height, width, radius);
+
+    dim3 blockDim(16, 16);
+    dim3 gridDim((width + blockDim.x - 1) / blockDim.x,
+      (height + blockDim.y - 1) / blockDim.y);
+
+    kernel<<<gridDim, blockDim)>>>(input_d, output_d, height, width, radius);
     gpuErrchk(cudaPeekAtLastError());
     // Copy the output back from the device to the host.
     OUTPUT_DATA_TYPE* output_h = new OUTPUT_DATA_TYPE[outputSize];
