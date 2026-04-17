@@ -43,8 +43,8 @@ inline void writeFile(std::string filePath, const std::vector<int32_t>* data) {
         throw;
     }
 
-    if (!outFile.write(reinterpret_cast<const char*>(data->data()), data->size())) {
-      std::cerr << "Failed to write           output file: " << filePath << std::endl;
+    if (!outFile.write(reinterpret_cast<const char*>(data->data()), data->size() * sizeof(int32_t))) {
+      std::cerr << "Failed to write output file: " << filePath << std::endl;
       throw;
     }
     outFile.close();
