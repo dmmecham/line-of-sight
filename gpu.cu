@@ -45,11 +45,11 @@ __global__ void lineOfSightKernel(int16_t* input, int32_t* output, size_t height
 }
 
 void gpu(std::string inputFilePath, std::string outputFilePath, size_t height, size_t width, size_t radius) {
-  std::vector<int16_t>* input = readFile(inputFilePath, height, width);
+  std::vector<int16_t> input = readFile(inputFilePath, height, width);
   
   CudaEngine<int16_t, int32_t> engine(lineOfSightKernel, height, width, radius);
   
-  int32_t* data = engine.compute(input->data());
+  int32_t* data = engine.compute(input.data());
   std::vector<int32_t> output(data, data + (height * width * sizeof(int32_t)));
   std::cout << output.size() << std::endl;
   

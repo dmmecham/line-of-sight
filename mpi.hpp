@@ -21,7 +21,7 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
   MPI_Comm_rank(MPI_COMM_WORLD, &processNumber); 
 
   // Read the file on the main process and broadcast to the rest.
-  std::vector<int16_t>* input;
+  std::vector<int16_t> input;
   if (processNumber == 0) {
     try {
       input = readFile(inputFilePath, height, width);
@@ -31,7 +31,7 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
     }
   }
   // Send the data to each of the process.
-  MPI_Bcast(input->data(), width * height, MPI_INT16_T, 0, MPI_COMM_WORLD);
+  MPI_Bcast(input.data(), width * height, MPI_INT16_T, 0, MPI_COMM_WORLD);
 
   // Determine the portion each process will actually compute.
   // Be careful of uneven division.
@@ -52,7 +52,7 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
       for (size_t y2 = yStart; y2 <= yEnd; y2++) {
         for (size_t x2 = xStart; x2 <= xEnd; x2++) {
           if (!(y2 == y1 && x2 == x1)) {
-            visiblePoints += isVisible2(x1, y1, x2, y2, input->data(), width);
+            visiblePoints += isVisible2(x1, y1, x2, y2, input.data(), width);
           }
         }
       }

@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-inline std::vector<int16_t>* readFile(std::string filePath, size_t height, size_t width) {
+inline std::vector<int16_t> readFile(std::string filePath, size_t height, size_t width) {
   size_t pixels = height * width;
   size_t dataSize = pixels * sizeof(int16_t);
 
@@ -26,17 +26,16 @@ inline std::vector<int16_t>* readFile(std::string filePath, size_t height, size_
   std::cout << totalBytes << " bytes read." << std::endl;
   std::cout << dataSize << " bytes expected." << std::endl;
 
-  std::vector<int16_t>* heightMap = new std::vector<int16_t>(pixels);
-  if (!inputFile.read(reinterpret_cast<char*>(heightMap->data()), totalBytes)) {
+  std::vector<int16_t> heightMap(pixels);
+  if (!inputFile.read(reinterpret_cast<char*>(heightMap.data()), totalBytes)) {
       std::cerr << "Error reading input file." << std::endl;
       throw;
   }
-
   
   return heightMap;
 }
 
-inline void writeFile(std::string filePath, std::vector<int32_t>* data) {
+inline void writeFile(std::string filePath, const std::vector<int32_t>* data) {
   // Write output file as 32-bit signed ints
     std::ofstream outFile(filePath, std::ios::binary);
     if (!outFile.is_open()) {
