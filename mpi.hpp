@@ -43,10 +43,10 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
   std::vector<int32_t> localOutput((localEndRow - localStartRow) * width);
   for (size_t y1 = localStartRow; y1 < localEndRow; y1++) {
     for (size_t x1 = 0; x1 < width; x1++) {
-      size_t xStart = std::max(x1 - radius, (size_t)0);
-      size_t xEnd = std::min(x1 + radius, width - 1);
-      size_t yStart = std::max(y1 - radius, (size_t)0);
-      size_t yEnd = std::min(y1 + radius, height - 1);
+      int32_t xStart = std::max((int32_t)x1 - (int32_t)radius, 0);
+      int32_t xEnd = std::min((int32_t)x1 + (int32_t)radius, (int32_t)width - 1);
+      int32_t yStart = std::max((int32_t)y1 - (int32_t)radius, 0);
+      int32_t yEnd = std::min((int32_t)y1 + (int32_t)radius, (int32_t)height - 1);
 
       int32_t visiblePoints = 0;
       for (size_t y2 = yStart; y2 <= yEnd; y2++) {
