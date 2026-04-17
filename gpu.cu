@@ -11,16 +11,9 @@
 
 #include "bresenham.hpp"
 #include "cuda_utilities.hpp"
+#include "file_utilities.hpp"
 
 #include "gpu.hpp"
-template <typename T, typename U>
-__global__ void simple(T* input, U* output, size_t height, size_t width, size_t radius)
-{
-  size_t x1 = blockIdx.x * blockDim.x + threadIdx.x;
-  size_t y1 = blockIdx.y * blockDim.y + threadIdx.y;
-
-  output[y1 * width + x1] = input[y1 * width + x1];
-}
 
 __global__ void lineOfSightKernel(int16_t* input, int32_t* output, size_t height, size_t width, size_t radius) {
   size_t x1 = blockIdx.x * blockDim.x + threadIdx.x;
@@ -41,26 +34,28 @@ __global__ void lineOfSightKernel(int16_t* input, int32_t* output, size_t height
   for (size_t y2 = yStart; y2 <= yEnd; y2++) {
     for (size_t x2 = xStart; x2 <= xEnd; x2++) {
       if (!(y2 == y1 && x2 == x1)) {
-        visiblePoints += isVisible(x1, y1, x2, y2, input, width);
+        visiblePoints += isVisible2(x1, y1, x2, y2, input, width);
       }
     }
   }
   output[y1 * width + x1] = visiblePoints;
   if (y1 % 64 == 0 && x1 == 0) {
-    printf("Processing row %d\n", y1);
+    printf("Processing row %llu\n", y1);
   }
 }
 
-std::vector<int32_t>* gpu(int16_t* input, size_t height, size_t width, size_t radius) {
+void gpu(std::string inputFilePath, std::string outputFilePath, size_t height, size_t width, size_t radius) {
+  std::vector<int16_t>* input = readFile(inputFilePath, height, width);
+  
   CudaEngine<int16_t, int32_t> engine(lineOfSightKernel, height, width, radius);
   
-  int32_t* data = engine.compute(input);
-  std::vector<int32_t>* output = new std::vector<int32_t>(data, data + (height * width * sizeof(int32_t)));
-  std::cout << output->size() << std::endl;
+  int32_t* data = engine.compute(input->data());
+  std::vector<int32_t> output(data, data + (height * width * sizeof(int32_t)));
+  std::cout << output.size() << std::endl;
   
   std::cout << "GPU Time: " << std::fixed << std::setprecision(2) << engine.getTime() << " ms" << std::endl;
 
-  return output;
+  writeFile(outputFilePath, &output);
 }
 
 #endif // GPU_CU

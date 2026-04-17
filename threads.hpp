@@ -8,7 +8,7 @@
 #include "bresenham.hpp"
 
 // Serial implementation
-std::vector<int32_t>* serialAlgorithm(const std::vector<int16_t>& heightMap, size_t height, size_t width, size_t radius) {
+inline std::vector<int32_t>* serialAlgorithm(const std::vector<int16_t>& heightMap, size_t height, size_t width, size_t radius) {
     std::vector<int32_t> visibleCounts(heightMap.size(), 0);
     auto t0 = std::chrono::high_resolution_clock::now();
 

@@ -6,10 +6,12 @@
 #include <vector>
 
 #include "bresenham.hpp"
+#include "file_utilities.hpp"
 
 // Serial implementation
-std::vector<int32_t>* serialAlgorithm(const std::vector<int16_t>& heightMap, size_t height, size_t width, size_t radius) {
-    std::vector<int32_t>* visibleCounts = new std::vector<int32_t>(heightMap.size(), 0);
+inline void serialAlgorithm(std::string inputFilePath, std::string outputFilePath, size_t height, size_t width, size_t radius) {
+  std::vector<int16_t>* heightMap = readFile(inputFilePath, height, width);
+    std::vector<int32_t>* visibleCounts = new std::vector<int32_t>(heightMap->size(), 0);
     auto t0 = std::chrono::high_resolution_clock::now();
 
     for (int y1 = 0; y1 < height; ++y1) {
@@ -28,7 +30,7 @@ std::vector<int32_t>* serialAlgorithm(const std::vector<int16_t>& heightMap, siz
                     // Skip self-comparison
                     if (x1 == x2 && y1 == y2) continue;
                     // Check line of sight using Bresenham's algorithm
-                    if (isVisible(x1, y1, x2, y2, heightMap.data(), width)) ++count;
+                    if (isVisible(x1, y1, x2, y2, heightMap->data(), width)) ++count;
                 }
             }
 
@@ -46,7 +48,7 @@ std::vector<int32_t>* serialAlgorithm(const std::vector<int16_t>& heightMap, siz
     auto t1 = std::chrono::high_resolution_clock::now();
     double totalSec = std::chrono::duration<double>(t1 - t0).count();
     std::cout << "Visibility computation complete in " << totalSec << " seconds." << std::endl;
-    return visibleCounts;
+    writeFile(outputFilePath, visibleCounts);
 }
 
 #endif // NO_THREADS_HPP

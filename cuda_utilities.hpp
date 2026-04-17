@@ -5,10 +5,10 @@
 
 #include "cuda_runtime.h"
 
-const int BLOCK_SIZE = 16; // The size of the block for the GPU kernel.
-const int MASK_SIZE = 100;
-const int MASK_RADIUS = MASK_SIZE / 2; // The radius of the neighborhood, which is used to determine how much extra space is needed in the tile for the shared memory kernel.
-const int TILE_SIZE = BLOCK_SIZE + MASK_SIZE - 1; // The size of the tile that each block will process.
+// const int BLOCK_SIZE = 16; // The size of the block for the GPU kernel.
+// const int MASK_SIZE = 100;
+// const int MASK_RADIUS = MASK_SIZE / 2; // The radius of the neighborhood, which is used to determine how much extra space is needed in the tile for the shared memory kernel.
+// const int TILE_SIZE = BLOCK_SIZE + MASK_SIZE - 1; // The size of the tile that each block will process.
 
 // CUDA Error Checking Macro
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
@@ -19,6 +19,7 @@ inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort =
   }
 }
 
+// Helper class for tracking time of GPU computation.
 class CudaTimer {
 public:
   CudaTimer() {
@@ -59,17 +60,19 @@ public:
     radius(radius),
     width(width) {}
 
+  // Runs the kernel on the input data.
   OUTPUT_DATA_TYPE* compute(INPUT_DATA_TYPE* input_h) {
     // Start measuring how long the computations take, including setup and teardown.
     timer.startTimer();
 
+    size_t numberOfPixels = height * width;
     // Pointers for synchronizing device memory.
-    size_t inputSize = height * width * sizeof(INPUT_DATA_TYPE);
-    size_t outputSize = height * width * sizeof(OUTPUT_DATA_TYPE);
-    std::cout << inputSize << " -> " << outputSize << std::endl;
+    size_t inputSize = numberOfPixels * sizeof(INPUT_DATA_TYPE);
+    size_t outputSize = numberOfPixels * sizeof(OUTPUT_DATA_TYPE);
+    
+    // Allocate device memory for the current input and the temporary input.
     INPUT_DATA_TYPE* input_d;
     OUTPUT_DATA_TYPE* output_d;
-    // Allocate device memory for the current input and the temporary input.
     gpuErrchk(cudaMalloc(&input_d, inputSize));
     gpuErrchk(cudaMalloc(&output_d, outputSize));
     // Copy the initial input from host to device memory.
@@ -80,15 +83,19 @@ public:
       return nullptr;
     }
     gpuErrchk(cudaPeekAtLastError());
-    dim3 block(BLOCK_SIZE, BLOCK_SIZE, 1);
-    dim3 numBlocks(std::ceil(width / (1.0 * BLOCK_SIZE)), std::ceil(height / (1.0 * BLOCK_SIZE)), 1);
 
-    std::cout << "Launching kernel with " << block.x << "x" << block.y << " threads per block and " << numBlocks.x << "x" << numBlocks.y << " blocks." << std::endl;
+    // Determine the optimal block and grid size by querying the GPU.
+    int blockSize = 0;
+    int minimumGridSize = 0;
+    cudaOccupancyMaxPotentialBlockSize(&minimumGridSize, &blockSize, kernel, 0, 0);
+    int blockRoot = sqrt(blockSize);
+    int gridSize = (numberOfPixels + blockSize - 1) / blockSize;
+    
     // Launch the kernel to compute the output.
     std::cout << height << "x" << width << " with radius " << radius << std::endl;
     std::cout << "Input: " << input_h[0] << ", " << input_h[1] << ", " << input_h[2] << std::endl;
     
-    kernel<<<numBlocks, block>>>(input_d, output_d, height, width, radius);
+    kernel<<<gridSize, dim3(blockRoot, blockRoot)>>>(input_d, output_d, height, width, radius);
     gpuErrchk(cudaPeekAtLastError());
     // Copy the output back from the device to the host.
     OUTPUT_DATA_TYPE* output_h = new OUTPUT_DATA_TYPE[outputSize];
@@ -105,6 +112,7 @@ public:
     return output_h;
   }
 
+  // Determine how long the computation took.
   float getTime() {
     return timer.getElapsedTime();
   }
