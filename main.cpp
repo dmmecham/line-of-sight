@@ -11,7 +11,7 @@
 #include "mpi.hpp"
 //#include "mpi_gpu.hpp"
 #include "no_threads.hpp"
-//#include "threads.hpp"
+#include "threads.hpp"
 
 
 enum ComputeType {
@@ -24,7 +24,7 @@ enum ComputeType {
 
 std::map<std::string, ComputeType> computeTypeMap = {
   {"no-threads", NO_THREADS},
-  //{"threads", THREADS},
+  {"threads", THREADS},
   {"gpu", GPU},
   {"mpi", MPI},
   //{"mpi-gpu", MPI_GPU}
@@ -78,9 +78,9 @@ int main(int argc, char** argv) {
           // Run the serial algorithm implementation
           serialAlgorithm(inputFilePath, outputFilePath, height, width, radius);
           break;
-        // case ComputeType::THREADS:
-        //   output = threadedAlgorithm(heightMap, height, width, radius);
-        //   break;
+        case ComputeType::THREADS:
+          threadedAlgorithm(inputFilePath, outputFilePath, height, width, radius);
+          break;
         case ComputeType::GPU:
           gpu(inputFilePath, outputFilePath, height, width, radius);
           break;

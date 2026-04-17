@@ -37,8 +37,8 @@ inline void serialAlgorithm(std::string inputFilePath, std::string outputFilePat
             visibleCounts[idx1] = count;
         }
 
-        // Print progress every 64 rows
-        if ((y1 % 64) == 0) {
+        // Print progress every 100 rows
+        if ((y1 % 100) == 0) {
             auto tnow = std::chrono::high_resolution_clock::now();
             double sec = std::chrono::duration<double>(tnow - t0).count();
             std::cout << "Row " << y1 << " elapsed: " << sec << "s" << std::endl;
