@@ -23,11 +23,11 @@ __global__ void lineOfSightKernel(int16_t* input, int32_t* output, size_t height
     return;
   }
 
-  size_t xStart = std::max(x1 - radius, (size_t)0);
-  size_t xEnd = std::min(x1 + radius , width - 1);
+  int32_t xStart = std::max((int32_t)x1 - (int32_t)radius, 0);
+  int32_t xEnd = std::min((int32_t)x1 + (int32_t)radius , (int32_t)width - 1);
 
-  size_t yStart = std::max(y1 - radius, (size_t)0);
-  size_t yEnd = std::min(y1 + radius, height - 1);
+  int32_t yStart = std::max((int32_t)y1 - (int32_t)radius, 0);
+  int32_t yEnd = std::min((int32_t)y1 + (int32_t)radius, (int32_t)height - 1);
 
   int32_t visiblePoints = 0;
   
