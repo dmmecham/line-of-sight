@@ -34,7 +34,7 @@ __global__ void lineOfSightKernel(int16_t* input, int32_t* output, size_t height
   for (size_t y2 = yStart; y2 <= yEnd; y2++) {
     for (size_t x2 = xStart; x2 <= xEnd; x2++) {
       if (!(y2 == y1 && x2 == x1)) {
-        visiblePoints += isVisible2(x1, y1, x2, y2, input, width);
+        visiblePoints += isVisible(x1, y1, x2, y2, input, width);
       }
     }
   }
@@ -50,12 +50,14 @@ void gpu(std::string inputFilePath, std::string outputFilePath, size_t height, s
   CudaEngine<int16_t, int32_t> engine(lineOfSightKernel, height, width, radius);
   
   int32_t* data = engine.compute(input.data());
-  std::vector<int32_t> output(data, data + (height * width * sizeof(int32_t)));
+  std::vector<int32_t> output(data, data + (height * width));
   std::cout << output.size() << std::endl;
   
   std::cout << "GPU Time: " << std::fixed << std::setprecision(2) << engine.getTime() << " ms" << std::endl;
 
   writeFile(outputFilePath, &output);
+
+  delete data;
 }
 
 #endif // GPU_CU
