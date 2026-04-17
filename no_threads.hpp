@@ -14,19 +14,19 @@ inline void serialAlgorithm(std::string inputFilePath, std::string outputFilePat
     std::vector<int32_t> visibleCounts = std::vector<int32_t>(heightMap.size(), 0);
     auto t0 = std::chrono::high_resolution_clock::now();
 
-    for (int y1 = 0; y1 < height; ++y1) {
-        for (int x1 = 0; x1 < width; ++x1) {
-            int idx1 = y1 * width + x1;
+    for (size_t y1 = 0; y1 < height; ++y1) {
+        for (size_t x1 = 0; x1 < width; ++x1) {
+          size_t idx1 = y1 * width + x1;
             int32_t count = 0;
 
             // Radius-limited window
-            int y0 = std::max(0, (int)y1 - (int)radius);
-            int yN = std::min((int)height - 1, (int)y1 + (int)radius);
-            int x0 = std::max(0, (int)x1 - (int)radius);
-            int xN = std::min((int)width - 1, (int)x1 + (int)radius);
+            int32_t y0 = std::max(0, (int32_t)y1 - (int32_t)radius);
+            int32_t yN = std::min((int32_t)height - 1, (int32_t)y1 + (int32_t)radius);
+            int32_t x0 = std::max(0, (int32_t)x1 - (int32_t)radius);
+            int32_t xN = std::min((int32_t)width - 1, (int32_t)x1 + (int32_t)radius);
 
-            for (int y2 = y0; y2 <= yN; ++y2) {
-                for (int x2 = x0; x2 <= xN; ++x2) {
+            for (size_t y2 = y0; y2 <= yN; ++y2) {
+                for (size_t x2 = x0; x2 <= xN; ++x2) {
                     // Skip self-comparison
                     if (x1 == x2 && y1 == y2) continue;
                     // Check line of sight using Bresenham's algorithm
