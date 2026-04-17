@@ -97,7 +97,7 @@ public:
     dim3 gridDim((width + blockDim.x - 1) / blockDim.x,
       (height + blockDim.y - 1) / blockDim.y);
 
-    kernel<<<gridDim, blockDim)>>>(input_d, output_d, height, width, radius);
+    kernel<<<gridDim, blockDim>>>(input_d, output_d, height, width, radius);
     gpuErrchk(cudaPeekAtLastError());
     // Copy the output back from the device to the host.
     OUTPUT_DATA_TYPE* output_h = new OUTPUT_DATA_TYPE[outputSize];
