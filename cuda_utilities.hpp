@@ -58,9 +58,16 @@ public:
   : height(height),
     kernel(kernel),
     radius(radius),
-    rowEnd(rowEnd || height),
+    rowEnd(rowEnd),
     rowStart(rowStart),
-    width(width) {}
+    width(width)
+  {
+    if (rowEnd == 0) {
+      rowEnd = height;
+    }
+    std::cout << "height: " << height << " width: " << width << " radius " << radius
+              << " rowStart: " << rowStart << " rowEnd: " << rowEnd << std::endl;
+  }
 
   // Runs the kernel on the input data.
   OUTPUT_DATA_TYPE* compute(INPUT_DATA_TYPE* input_h) {
@@ -68,9 +75,12 @@ public:
     timer.startTimer();
 
     size_t numberOfPixels = height * width;
+    size_t numberOfPixelsInRow = (rowEnd - rowStart) * width;
     // Pointers for synchronizing device memory.
     size_t inputSize = numberOfPixels * sizeof(INPUT_DATA_TYPE);
-    size_t outputSize = numberOfPixels * sizeof(OUTPUT_DATA_TYPE);
+    size_t outputSize = numberOfPixelsInRow * sizeof(OUTPUT_DATA_TYPE);
+
+    std::cout << "GPU compute output size: " << outputSize << std::endl;
     
     // Allocate device memory for the current input and the temporary input.
     INPUT_DATA_TYPE* input_d;
@@ -92,9 +102,8 @@ public:
     // cudaOccupancyMaxPotentialBlockSize(&minimumGridSize, &blockSize, kernel, 0, 0);
     
     // Launch the kernel to compute the output.
-    std::cout << height << "x" << width << " with radius " << radius << std::endl;
-    std::cout << "Input: " << input_h[0] << ", " << input_h[1] << ", " << input_h[2] << std::endl;
-
+    std::cout << height << "x" << width << " with radius " << radius << " start: " << rowStart << " rowEnd: " << rowEnd << std::endl;
+  
     dim3 blockDim(16, 16);
     dim3 gridDim((width + blockDim.x - 1) / blockDim.x,
       (height + blockDim.y - 1) / blockDim.y);

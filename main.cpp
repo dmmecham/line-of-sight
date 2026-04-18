@@ -19,7 +19,7 @@ enum ComputeType {
   NO_THREADS,
   THREADS,
   GPU,
-  MPI,
+  MPI_CPU,
   MPI_GPU
 };
 
@@ -27,7 +27,7 @@ std::map<std::string, ComputeType> computeTypeMap = {
   {"no-threads", NO_THREADS},
   {"threads", THREADS},
   {"gpu", GPU},
-  {"mpi", MPI},
+  {"mpi", MPI_CPU},
   {"mpi-gpu", MPI_GPU}
 };
 
@@ -85,7 +85,7 @@ int main(int argc, char** argv) {
         case ComputeType::GPU:
           gpu(inputFilePath, outputFilePath, height, width, radius);
           break;
-        case ComputeType::MPI:
+        case ComputeType::MPI_CPU:
           mpiAlgorithm(inputFilePath, outputFilePath, height, width, radius);
           break;
         case ComputeType::MPI_GPU:

@@ -14,6 +14,10 @@ __global__ inline void lineOfSightKernel(int16_t* input, int32_t* output, size_t
     return;
   }
 
+  if (y1 % 64 == 0 && x1 == 0) {
+    printf("Processing row %llu\n", y1);
+  }
+
   int32_t xStart = std::max((int32_t)x1 - (int32_t)radius, 0);
   int32_t xEnd = std::min((int32_t)x1 + (int32_t)radius , (int32_t)width - 1);
 
@@ -30,9 +34,6 @@ __global__ inline void lineOfSightKernel(int16_t* input, int32_t* output, size_t
     }
   }
   output[(y1 - yStart) * width + x1] = visiblePoints;
-  if (y1 % 64 == 0 && x1 == 0) {
-    printf("Processing row %llu\n", y1);
-  }
 }
 
 #endif // LINE_OF_SIGHT_CU
