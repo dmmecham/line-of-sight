@@ -28,7 +28,7 @@ std::map<std::string, ComputeType> computeTypeMap = {
   {"threads", THREADS},
   {"gpu", GPU},
   {"mpi", MPI},
-  //{"mpi-gpu", MPI_GPU}
+  {"mpi-gpu", MPI_GPU}
 };
 
 void printUsage(char* processName) {

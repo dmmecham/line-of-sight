@@ -43,13 +43,14 @@ void mpiGpuAlgorithm(std::string inputFilePath, std::string outputFilePath, size
   size_t processRowCount = std::ceil(height / processCount);
   size_t localStartRow = processNumber * processRowCount;
   size_t localEndRow = std::min(localStartRow + processRowCount, height);
+  size_t localRowTotal = localEndRow - localStartRow;
 
   auto t0 = std::chrono::high_resolution_clock::now();
   // Allocate output space and calculate each point in the input.
   CudaEngine<int16_t, int32_t> engine(lineOfSightKernel, height, width, radius, localStartRow, localEndRow);
   
   int32_t* data = engine.compute(input.data());
-  std::vector<int32_t> localOutput(data, data + (height * width));
+  std::vector<int32_t> localOutput(data, data + localRowTotal * width);
   std::cout << "GPU Time: " << std::fixed << std::setprecision(2) << engine.getTime() << " ms" << std::endl;
 
   auto t1 = std::chrono::high_resolution_clock::now();

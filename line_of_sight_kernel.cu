@@ -29,7 +29,7 @@ __global__ inline void lineOfSightKernel(int16_t* input, int32_t* output, size_t
       }
     }
   }
-  output[y1 * width + x1] = visiblePoints;
+  output[(y1 - yStart) * width + x1] = visiblePoints;
   if (y1 % 64 == 0 && x1 == 0) {
     printf("Processing row %llu\n", y1);
   }
