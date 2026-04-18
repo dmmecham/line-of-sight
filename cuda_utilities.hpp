@@ -54,10 +54,12 @@ public:
 template <typename INPUT_DATA_TYPE, typename OUTPUT_DATA_TYPE>
 class CudaEngine {
 public:
-  CudaEngine(void (*kernel)(INPUT_DATA_TYPE*, OUTPUT_DATA_TYPE*, size_t, size_t, size_t), size_t height, size_t width, size_t radius)
+  CudaEngine(void (*kernel)(INPUT_DATA_TYPE*, OUTPUT_DATA_TYPE*, size_t, size_t, size_t, size_t, size_t), size_t height, size_t width, size_t radius, size_t rowStart = 0, size_t rowEnd = 0)
   : height(height),
     kernel(kernel),
     radius(radius),
+    rowEnd(rowEnd || height),
+    rowStart(rowStart),
     width(width) {}
 
   // Runs the kernel on the input data.
@@ -85,9 +87,9 @@ public:
     gpuErrchk(cudaPeekAtLastError());
 
     // Determine the optimal block and grid size by querying the GPU.
-    int blockSize = 0;
-    int minimumGridSize = 0;
-    cudaOccupancyMaxPotentialBlockSize(&minimumGridSize, &blockSize, kernel, 0, 0);
+    // int blockSize = 0;
+    // int minimumGridSize = 0;
+    // cudaOccupancyMaxPotentialBlockSize(&minimumGridSize, &blockSize, kernel, 0, 0);
     
     // Launch the kernel to compute the output.
     std::cout << height << "x" << width << " with radius " << radius << std::endl;
@@ -97,7 +99,7 @@ public:
     dim3 gridDim((width + blockDim.x - 1) / blockDim.x,
       (height + blockDim.y - 1) / blockDim.y);
 
-    kernel<<<gridDim, blockDim>>>(input_d, output_d, height, width, radius);
+    kernel<<<gridDim, blockDim>>>(input_d, output_d, height, width, radius, rowStart, rowEnd);
     gpuErrchk(cudaPeekAtLastError());
     // Copy the output back from the device to the host.
     OUTPUT_DATA_TYPE* output_h = new OUTPUT_DATA_TYPE[outputSize];
@@ -124,10 +126,13 @@ private:
   size_t height;
   size_t radius;
   size_t width;
+  // Offsets for rows to process.
+  size_t rowEnd;
+  size_t rowStart;
   // Timing metrics.
   CudaTimer timer;
   // Reference to the kernel function to be executed.
-  void (*kernel)(INPUT_DATA_TYPE*, OUTPUT_DATA_TYPE*, size_t, size_t, size_t);
+  void (*kernel)(INPUT_DATA_TYPE*, OUTPUT_DATA_TYPE*, size_t, size_t, size_t, size_t, size_t);
 };
 
 #endif // CUDA_UTILITIES_HPP

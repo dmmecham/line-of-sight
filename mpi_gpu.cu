@@ -1,9 +1,7 @@
-#ifndef MPI_HPP
-#define MPI_HPP
-
 #include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -11,9 +9,11 @@
 #include <mpi.h>
 
 #include "bresenham.hpp"
+#include "cuda_utilities.hpp"
 #include "file_utilities.hpp"
+#include "line_of_sight_kernel.cu"
 
-inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, size_t height, size_t width, size_t radius) {
+void mpiGpuAlgorithm(std::string inputFilePath, std::string outputFilePath, size_t height, size_t width, size_t radius) {
   int processCount;
   int processNumber;
 
@@ -46,32 +46,11 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
 
   auto t0 = std::chrono::high_resolution_clock::now();
   // Allocate output space and calculate each point in the input.
-  std::vector<int32_t> localOutput((localEndRow - localStartRow) * width);
-  for (size_t y1 = localStartRow; y1 < localEndRow; y1++) {
-    for (size_t x1 = 0; x1 < width; x1++) {
-      int32_t xStart = std::max((int32_t)x1 - (int32_t)radius, 0);
-      int32_t xEnd = std::min((int32_t)x1 + (int32_t)radius, (int32_t)width - 1);
-      int32_t yStart = std::max((int32_t)y1 - (int32_t)radius, 0);
-      int32_t yEnd = std::min((int32_t)y1 + (int32_t)radius, (int32_t)height - 1);
-
-      int32_t visiblePoints = 0;
-      for (size_t y2 = yStart; y2 <= yEnd; y2++) {
-        for (size_t x2 = xStart; x2 <= xEnd; x2++) {
-          if (!(y2 == y1 && x2 == x1)) {
-            visiblePoints += isVisible(x1, y1, x2, y2, input.data(), width);
-          }
-        }
-        
-      }
-      localOutput[(y1 - localStartRow) * width + x1] = visiblePoints;
-    }
-    // Print progress every 100 rows
-    if ((y1 % 100) == 0) {
-      auto tnow = std::chrono::high_resolution_clock::now();
-      double sec = std::chrono::duration<double>(tnow - t0).count();
-      std::cout << "Row " << y1 << " elapsed: " << sec << "s" << std::endl;
-    }
-  }
+  CudaEngine<int16_t, int32_t> engine(lineOfSightKernel, height, width, radius, localStartRow, localEndRow);
+  
+  int32_t* data = engine.compute(input.data());
+  std::vector<int32_t> localOutput(data, data + (height * width));
+  std::cout << "GPU Time: " << std::fixed << std::setprecision(2) << engine.getTime() << " ms" << std::endl;
 
   auto t1 = std::chrono::high_resolution_clock::now();
   double totalSec = std::chrono::duration<double>(t1 - t0).count();
@@ -116,5 +95,3 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
   // Cleanup MPI
   MPI_Finalize(); 
 }
-
-#endif // MPI_HPP

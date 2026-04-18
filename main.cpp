@@ -10,7 +10,7 @@
 
 #include "gpu.hpp"
 #include "mpi.hpp"
-//#include "mpi_gpu.hpp"
+#include "mpi_gpu.hpp"
 #include "no_threads.hpp"
 #include "threads.hpp"
 
@@ -88,9 +88,9 @@ int main(int argc, char** argv) {
         case ComputeType::MPI:
           mpiAlgorithm(inputFilePath, outputFilePath, height, width, radius);
           break;
-        // case ComputeType::MPI_GPU:
-        //   output = mpiGpuAlgorithm(heightMap, height, width, radius);
-        //   break;
+        case ComputeType::MPI_GPU:
+          mpiGpuAlgorithm(inputFilePath, outputFilePath, height, width, radius);
+          break;
         default:
           std::cerr << "Invalid compute type" << std::endl;
           return 1;

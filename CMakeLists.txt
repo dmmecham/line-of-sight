@@ -15,7 +15,9 @@ add_executable(line_of_sight
   cuda_utilities.hpp
   gpu.cu
   gpu.hpp
+  line_of_sight_kernel.cu
   main.cpp
+  mpi_gpu.cu
   mpi_gpu.hpp
   no_threads.hpp
   threads.hpp
