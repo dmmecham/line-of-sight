@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <exception>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -94,8 +95,8 @@ int main(int argc, char** argv) {
           std::cerr << "Invalid compute type" << std::endl;
           return 1;
       }
-    } catch (...) {
-      std::cerr << "Unable to write output; computation may have failed" << std::endl;
+    } catch (const std::exception& e) {
+      std::cerr << e.what() << std::endl;
       return 1;
     }
 

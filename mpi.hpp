@@ -1,8 +1,10 @@
 #ifndef MPI_HPP
 #define MPI_HPP
 
+#include <chrono>
 #include <cmath>
 #include <cstdint>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -25,9 +27,10 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
   if (processNumber == 0) {
     try {
       input = readFile(inputFilePath, height, width);
-    } catch (...) {
+    } catch (std::exception& e) {
       // There is no data to process, so exit early.
       MPI_Abort(MPI_COMM_WORLD, 1);
+      throw e;
     }
   }
   // Send the data to each of the process.
@@ -39,6 +42,7 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
   size_t localStartRow = processNumber * processRowCount;
   size_t localEndRow = std::min(localStartRow + processRowCount, height);
 
+  auto t0 = std::chrono::high_resolution_clock::now();
   // Allocate output space and calculate each point in the input.
   std::vector<int32_t> localOutput((localEndRow - localStartRow) * width);
   for (size_t y1 = localStartRow; y1 < localEndRow; y1++) {
@@ -55,10 +59,21 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
             visiblePoints += isVisible2(x1, y1, x2, y2, input.data(), width);
           }
         }
+        
       }
       localOutput[(y1 - localStartRow) * width + x1] = visiblePoints;
     }
+    // Print progress every 100 rows
+    if ((y1 % 100) == 0) {
+      auto tnow = std::chrono::high_resolution_clock::now();
+      double sec = std::chrono::duration<double>(tnow - t0).count();
+      std::cout << "Row " << y1 << " elapsed: " << sec << "s" << std::endl;
+    }
   }
+
+  auto t1 = std::chrono::high_resolution_clock::now();
+  double totalSec = std::chrono::duration<double>(t1 - t0).count();
+  std::cout << "Visibility computation complete in " << totalSec << " seconds." << std::endl;
 
   // Prepare output data for coalescing.
   std::vector<int32_t>* globalOutput;
