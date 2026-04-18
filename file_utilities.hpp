@@ -39,7 +39,7 @@ inline std::vector<int16_t> readFile(std::string filePath, size_t height, size_t
   return heightMap;
 }
 
-inline void writeFile(std::string filePath, const std::vector<int32_t>* data) {
+inline void writeFile(std::string filePath, const std::vector<int32_t>& data) {
   // Write output file as 32-bit signed ints
     std::ofstream outFile(filePath, std::ios::binary);
     if (!outFile.is_open()) {
@@ -48,7 +48,7 @@ inline void writeFile(std::string filePath, const std::vector<int32_t>* data) {
         throw std::runtime_error(error.str());
     }
 
-    if (!outFile.write(reinterpret_cast<const char*>(data->data()), data->size() * sizeof(int32_t))) {
+    if (!outFile.write(reinterpret_cast<const char*>(data.data()), data.size() * sizeof(int32_t))) {
       std::stringstream error;
       error << "Failed to write output file: " << filePath << std::endl;
       throw std::runtime_error(error.str());

@@ -20,7 +20,7 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
   // Setup MPI
   MPI_Init(NULL, NULL); 
   MPI_Comm_size(MPI_COMM_WORLD, &processCount);
-  MPI_Comm_rank(MPI_COMM_WORLD, &processNumber); 
+  MPI_Comm_rank(MPI_COMM_WORLD, &processNumber);
 
   // Read the file on the main process and broadcast to the rest.
   std::vector<int16_t> input;
@@ -32,6 +32,8 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
       MPI_Abort(MPI_COMM_WORLD, 1);
       throw e;
     }
+  } else {
+    input.resize(height * width);
   }
   // Send the data to each of the process.
   MPI_Bcast(input.data(), width * height, MPI_INT16_T, 0, MPI_COMM_WORLD);
@@ -56,7 +58,7 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
       for (size_t y2 = yStart; y2 <= yEnd; y2++) {
         for (size_t x2 = xStart; x2 <= xEnd; x2++) {
           if (!(y2 == y1 && x2 == x1)) {
-            visiblePoints += isVisible2(x1, y1, x2, y2, input.data(), width);
+            visiblePoints += isVisible(x1, y1, x2, y2, input.data(), width);
           }
         }
         
@@ -76,27 +78,25 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
   std::cout << "Visibility computation complete in " << totalSec << " seconds." << std::endl;
 
   // Prepare output data for coalescing.
-  std::vector<int32_t>* globalOutput;
-  if (processNumber == 0) {
-    globalOutput = new std::vector<int32_t>(width * height);
-  }
-
+  std::vector<int32_t> globalOutput(width * height);
   // Calculate how much data is received by each process and where.
   std::vector<int> bytesToReceive(processCount);
   std::vector<int> receiveDisplacement(processCount);
-  for (int i = 0; i < processCount; i++) {
-    int receiveStart = i * processRowCount;
-    // Be careful of uneven division.
-    int receiveEnd = std::max(receiveStart + processRowCount, height);
-    receiveDisplacement[i] = receiveStart * width;
-    bytesToReceive[i] = (receiveEnd - receiveStart) * width;
+  if (processNumber == 0) {
+    for (int i = 0; i < processCount; i++) {
+      int receiveStart = i * processRowCount;
+      // Be careful of uneven division.
+      int receiveEnd = std::max(receiveStart + processRowCount, height);
+      receiveDisplacement[i] = receiveStart * width;
+      bytesToReceive[i] = (receiveEnd - receiveStart) * width;
+    }
   }
 
   MPI_Gatherv(
     localOutput.data(),
     localOutput.size(),
     MPI_INT32_T,
-    globalOutput->data(),
+    globalOutput.data(),
     bytesToReceive.data(),
     receiveDisplacement.data(),
     MPI_INT32_T,

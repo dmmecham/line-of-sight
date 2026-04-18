@@ -55,7 +55,7 @@ void gpu(std::string inputFilePath, std::string outputFilePath, size_t height, s
   
   std::cout << "GPU Time: " << std::fixed << std::setprecision(2) << engine.getTime() << " ms" << std::endl;
 
-  writeFile(outputFilePath, &output);
+  writeFile(outputFilePath, output);
 
   delete data;
 }

@@ -55,7 +55,7 @@ inline void threadedAlgorithm(std::string inputFilePath, std::string outputFileP
   //  std::cout << "Point (" << (i % width) << ", " << (i / width) << ") sees " << visibleCounts[i] << " points." << std::endl;
   //}
 
-  writeFile(outputFilePath, &visibleCounts);
+  writeFile(outputFilePath, visibleCounts);
 }
 
 #endif // THREADS_HPP

@@ -53,7 +53,7 @@ inline void serialAlgorithm(std::string inputFilePath, std::string outputFilePat
     //  std::cout << "Point (" << (i % width) << ", " << (i / width) << ") sees " << visibleCounts[i] << " points." << std::endl;
     //}
 
-    writeFile(outputFilePath, &visibleCounts);
+    writeFile(outputFilePath, visibleCounts);
 }
 
 #endif // NO_THREADS_HPP
