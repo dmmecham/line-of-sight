@@ -1,13 +1,14 @@
 # line-of-sight
+[https://github.com/dmmecham/line-of-sight](GitHub Repository)
 
 Calculates the number of pixels visible for every pixel in an elevation map within a provided radius. Utilizes Bresenham's algorithm over a variety of computation types that split the task up for different performance gains.
 
 ## Build
 ### Prerequisites
-CMake 3.21+
-C++ compiler (C++17 support, Visual Studio 2022/2026 and gcc 8 have been tested)
-MPI
-NVIDIA CUDA SDK
+- CMake 3.21+
+- C++ compiler (C++17 support, Visual Studio 2022/2026 and gcc 8 have been tested)
+- MPI
+- NVIDIA CUDA SDK
 
 For the CHPC lab, the following command will load all necessary modules: `module load cmake cuda gcc mpi`
 
@@ -39,5 +40,5 @@ The `compute type` argument determines how processing is parallelized:
 All compute types should produce the same output data if all other arguments (besides the output file path) are the same. A validation program is provided that simply compares two files and checks if they are identical in data (no file metadata is checked with the file system). `verification <file path 1> <file path 2>` will indicate whether the files are identical. It will either be built when executing `make` with no arguments, or `make verification` to specifically build this executable.
 
 ## Contributors
-Matt Robinson provided the initial Bresenham modularized implementation, the serialized and threaded implementations, much bug fixing on the other implementations, testing and validation of output for each implementation, and performance metrics.
-Drew Mecham provided the CMake build implementation, documentation, initial GPU kernel, MPI  initial implementation, the combined MPI/GPU initial implementation, verification program, and testing.
+- Matt Robinson provided the initial Bresenham modularized implementation, the serialized and threaded implementations, much bug fixing on the other implementations, testing and validation of output for each implementation, and performance metrics.
+- Drew Mecham provided the CMake build implementation, documentation, initial GPU kernel, MPI  initial implementation, the combined MPI/GPU initial implementation, verification program, and testing.
