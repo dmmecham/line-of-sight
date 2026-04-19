@@ -16,7 +16,7 @@ void gpu(std::string inputFilePath, std::string outputFilePath, size_t height, s
   CudaEngine<int16_t, int32_t> engine(lineOfSightKernel, height, width, radius, 0, height);
   
   int32_t* data = engine.compute(input.data());
-  std::vector<int32_t> output(data, data + height * width * sizeof(int32_t));
+  std::vector<int32_t> output(data, data + height * width);
   std::cout << output.size() << std::endl;
   
   std::cout << "GPU Time: " << std::fixed << std::setprecision(2) << engine.getTime() << " ms" << std::endl;

@@ -106,12 +106,12 @@ public:
   
     dim3 blockDim(16, 16);
     dim3 gridDim((width + blockDim.x - 1) / blockDim.x,
-      (height + blockDim.y - 1) / blockDim.y);
+      ((rowEnd - rowStart) + blockDim.y - 1) / blockDim.y);
 
     kernel<<<gridDim, blockDim>>>(input_d, output_d, height, width, radius, rowStart, rowEnd);
     gpuErrchk(cudaPeekAtLastError());
     // Copy the output back from the device to the host.
-    OUTPUT_DATA_TYPE* output_h = new OUTPUT_DATA_TYPE[outputSize];
+    OUTPUT_DATA_TYPE* output_h = new OUTPUT_DATA_TYPE[numberOfPixelsInRow];
     gpuErrchk(cudaMemcpy(output_h, output_d, outputSize, cudaMemcpyDeviceToHost));
     if (cudaDeviceSynchronize() != cudaSuccess) {
       std::cerr << "Error: Data copy to device failed." << std::endl;

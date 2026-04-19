@@ -8,9 +8,10 @@
 
 __global__ inline void lineOfSightKernel(int16_t* input, int32_t* output, size_t height, size_t width, size_t radius, size_t rowStart, size_t rowEnd) {
   size_t x1 = blockIdx.x * blockDim.x + threadIdx.x;
-  size_t y1 = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t y_local = blockIdx.y * blockDim.y + threadIdx.y;
+  size_t y1 = y_local + rowStart;
 
-  if (x1 >= width || y1 >= rowEnd || y1 < rowStart) {
+  if (x1 >= width || y1 >= rowEnd) {
     return;
   }
 
@@ -21,8 +22,8 @@ __global__ inline void lineOfSightKernel(int16_t* input, int32_t* output, size_t
   int32_t xStart = std::max((int32_t)x1 - (int32_t)radius, 0);
   int32_t xEnd = std::min((int32_t)x1 + (int32_t)radius , (int32_t)width - 1);
 
-  int32_t yStart = std::max((int32_t)y1 - (int32_t)radius, (int32_t)rowStart);
-  int32_t yEnd = std::min((int32_t)y1 + (int32_t)radius, (int32_t)rowEnd - 1);
+  int32_t yStart = std::max((int32_t)y1 - (int32_t)radius, 0);
+  int32_t yEnd = std::min((int32_t)y1 + (int32_t)radius, (int32_t)height - 1);
 
   int32_t visiblePoints = 0;
   
@@ -33,7 +34,7 @@ __global__ inline void lineOfSightKernel(int16_t* input, int32_t* output, size_t
       }
     }
   }
-  output[(y1 - yStart) * width + x1] = visiblePoints;
+  output[y_local * width + x1] = visiblePoints;
 }
 
 #endif // LINE_OF_SIGHT_CU

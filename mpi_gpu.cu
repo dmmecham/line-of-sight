@@ -52,6 +52,7 @@ void mpiGpuAlgorithm(std::string inputFilePath, std::string outputFilePath, size
   int32_t* data = engine.compute(input.data());
   std::vector<int32_t> localOutput(data, data + localRowTotal * width);
   std::cout << "GPU Time: " << std::fixed << std::setprecision(2) << engine.getTime() << " ms" << std::endl;
+  delete[] data;
 
   auto t1 = std::chrono::high_resolution_clock::now();
   double totalSec = std::chrono::duration<double>(t1 - t0).count();
@@ -66,7 +67,7 @@ void mpiGpuAlgorithm(std::string inputFilePath, std::string outputFilePath, size
     for (int i = 0; i < processCount; i++) {
       int receiveStart = i * processRowCount;
       // Be careful of uneven division.
-      int receiveEnd = std::max(receiveStart + processRowCount, height);
+      int receiveEnd = std::min(receiveStart + processRowCount, height);
       receiveDisplacement[i] = receiveStart * width;
       bytesToReceive[i] = (receiveEnd - receiveStart) * width;
     }

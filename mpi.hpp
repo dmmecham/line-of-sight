@@ -46,7 +46,7 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
 
   auto t0 = std::chrono::high_resolution_clock::now();
   // Allocate output space and calculate each point in the input.
-  std::vector<int32_t> localOutput((localEndRow - localStartRow) * width * sizeof(int32_t));
+  std::vector<int32_t> localOutput((localEndRow - localStartRow) * width);
   for (size_t y1 = localStartRow; y1 < localEndRow; y1++) {
     for (size_t x1 = 0; x1 < width; x1++) {
       int32_t xStart = std::max((int32_t)x1 - (int32_t)radius, 0);
@@ -86,7 +86,7 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
     for (int i = 0; i < processCount; i++) {
       int receiveStart = i * processRowCount;
       // Be careful of uneven division.
-      int receiveEnd = std::max(receiveStart + processRowCount, height);
+      int receiveEnd = std::min(receiveStart + processRowCount, height);
       receiveDisplacement[i] = receiveStart * width;
       bytesToReceive[i] = (receiveEnd - receiveStart) * width;
     }
@@ -94,7 +94,7 @@ inline void mpiAlgorithm(std::string inputFilePath, std::string outputFilePath, 
 
   MPI_Gatherv(
     localOutput.data(),
-    localOutput.size() * sizeof(int32_t),
+    localOutput.size(),
     MPI_INT32_T,
     globalOutput.data(),
     bytesToReceive.data(),
