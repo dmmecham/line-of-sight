@@ -35,3 +35,7 @@ target_link_libraries(line_of_sight PRIVATE
   MPI::MPI_CXX
   CUDA::cudart
 )
+
+add_executable(verification
+  verification.cpp
+)
